@@ -177,84 +177,135 @@
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        // Configuración de Cloudinary
-        const cloudName = 'dlhir3l48';
-        const uploadPreset = 'movies_upload';
-        
-        // Elementos del DOM
-        const uploadButton = document.getElementById('upload-button');
-        const saveButton = document.getElementById('save-button');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
-        const uploadPreview = document.getElementById('upload-preview');
-        
-        let uploadedVideo = null;
-        
-        // Configurar el widget de subida
-        const uploadWidget = cloudinary.createUploadWidget({
-            cloudName: cloudName,
-            uploadPreset: uploadPreset,
-            sources: ['local'],
-            multiple: false,
-            resourceType: 'video',
-            maxFileSize: 100000000, // 100MB
-            clientAllowedFormats: ['mp4', 'mov', 'avi', 'mkv'],
-            showAdvancedOptions: true,
-            cropping: false
-        }, (error, result) => {
-            if (!error && result && result.event) {
-                switch(result.event) {
-                    case 'queues-start':
-                        progressContainer.style.display = 'block';
-                        break;
-                        
-                    case 'upload-progress':
-                        const progress = Math.round(result.info.progress);
-                        progressBar.style.width = `${progress}%`;
-                        break;
-                        
-                    case 'success':
-                        uploadedVideo = result.info;
-                        progressBar.style.width = '100%';
-                        
-                        uploadPreview.innerHTML = `
-                            <h3>${uploadedVideo.original_filename}</h3>
-                            <video controls>
-                                <source src="${uploadedVideo.secure_url}" type="video/mp4">
-                            </video>
-                            <p>Tamaño: ${formatFileSize(uploadedVideo.bytes)}</p>
-                        `;
-                        
-                        saveButton.disabled = false;
-                        break;
-                }
-            }
-        });
-        
-        // Función para formatear el tamaño del archivo
-        function formatFileSize(bytes) {
-            if (bytes < 1024) return bytes + ' bytes';
-            else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
-            else if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
-            else return (bytes / 1073741824).toFixed(2) + ' GB';
+     // Configuración de Cloudinary
+const cloudName = 'dlhir3l48';
+const uploadPreset = 'movies_upload'; // DEBE coincidir exactamente con tu preset en Cloudinary
+
+// Elementos del DOM
+const uploadButton = document.getElementById('upload-button');
+const saveButton = document.getElementById('save-button');
+const progressContainer = document.getElementById('progress-container');
+const progressBar = document.getElementById('progress-bar');
+const uploadPreview = document.getElementById('upload-preview');
+const movieTitleInput = document.getElementById('movie-title');
+const movieDescInput = document.getElementById('movie-description');
+
+let uploadedVideo = null;
+
+// Configuración del Widget de Cloudinary (versión corregida)
+const uploadWidget = cloudinary.createUploadWidget({
+    cloudName: cloudName,
+    uploadPreset: uploadPreset,
+    sources: ['local'],
+    multiple: false,
+    resourceType: 'video',
+    maxFileSize: 100000000, // 100MB máximo
+    clientAllowedFormats: ['mp4', 'mov', 'avi', 'mkv'],
+    folder: 'cinecloud_movies', // Opcional pero recomendado
+    showAdvancedOptions: false,
+    cropping: false,
+    styles: {
+        palette: {
+            window: "#1F2937",
+            windowBorder: "#4B5563",
+            tabIcon: "#F59E0B",
+            textDark: "#111827",
+            textLight: "#F3F4F6"
         }
-        
-        // Evento para abrir el widget de subida
-        uploadButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            uploadWidget.open();
-        });
-        
-        // Evento para guardar la película
-        saveButton.addEventListener('click', () => {
-            if (uploadedVideo) {
-                const title = document.getElementById('movie-title').value || uploadedVideo.original_filename;
-                alert(`Película "${title}" subida correctamente!\n\nSerás redirigido a la página principal.`);
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
-            }
-        });
+    }
+}, handleUpload);
+
+// Función para manejar la subida
+function handleUpload(error, result) {
+    if (error) {
+        console.error('Error en subida:', error);
+        alert(`Error al subir: ${error.message}`);
+        return;
+    }
+
+    switch(result.event) {
+        case 'queues-start':
+            progressContainer.style.display = 'block';
+            break;
+            
+        case 'upload-progress':
+            const progress = Math.round(result.info.progress);
+            progressBar.style.width = `${progress}%`;
+            break;
+            
+        case 'success':
+            uploadedVideo = result.info;
+            progressBar.style.width = '100%';
+            
+            // Mostrar vista previa
+            uploadPreview.innerHTML = `
+                <div class="upload-success">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>${uploadedVideo.original_filename}</h3>
+                    <video controls>
+                        <source src="${uploadedVideo.secure_url}" type="video/mp4">
+                    </video>
+                    <p>Tamaño: ${formatFileSize(uploadedVideo.bytes)}</p>
+                    <p>Subido: ${new Date().toLocaleString()}</p>
+                </div>
+            `;
+            
+            saveButton.disabled = false;
+            break;
+            
+        case 'close':
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+            }, 1500);
+            break;
+    }
+}
+
+// Función para formatear tamaño de archivo
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' bytes';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+    else if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
+    else return (bytes / 1073741824).toFixed(2) + ' GB';
+}
+
+// Evento para abrir el widget
+uploadButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    
+    // Validar campos antes de subir
+    if (!movieTitleInput.value.trim()) {
+        alert('Por favor ingresa un título para la película');
+        movieTitleInput.focus();
+        return;
+    }
+    
+    uploadWidget.open();
+});
+
+// Evento para guardar
+saveButton.addEventListener('click', () => {
+    if (!uploadedVideo) {
+        alert('No hay película subida para guardar');
+        return;
+    }
+
+    const title = movieTitleInput.value.trim() || uploadedVideo.original_filename;
+    const description = movieDescInput.value.trim() || 'Sin descripción';
+    
+    // Aquí normalmente enviarías los datos a tu backend
+    console.log('Guardando película:', {
+        title,
+        description,
+        videoInfo: uploadedVideo
+    });
+    
+    alert(`¡"${title}" guardada exitosamente!\nRedirigiendo a la galería...`);
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 2000);
+});
     </script>
 </body>
 </html>
