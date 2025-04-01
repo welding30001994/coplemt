@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Película | CineCloud</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a2e;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        header {
+            background: #16213e;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: #4cc9f0;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .upload-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #16213e;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #4cc9f0;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #4cc9f0;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            border-radius: 4px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: #4cc9f0;
+            color: #16213e;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #3aa8d8;
+        }
+        
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #upload-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        #upload-preview video {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+        
+        .progress-container {
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #4cc9f0;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-film fa-2x"></i>
+            <h1>CineCloud</h1>
+        </div>
+        <nav>
+            <a href="index.html"><i class="fas fa-home"></i> Inicio</a>
+            <a href="upload.html" class="active"><i class="fas fa-upload"></i> Subir Película</a>
+        </nav>
+    </header>
+
+    <div class="upload-container">
+        <h1><i class="fas fa-cloud-upload-alt"></i> Subir Nueva Película</h1>
+        
+        <div class="form-group">
+            <label for="movie-title"><i class="fas fa-heading"></i> Título de la Película</label>
+            <input type="text" id="movie-title" placeholder="Ej: El Padrino">
+        </div>
+        
+        <div class="form-group">
+            <label for="movie-description"><i class="fas fa-align-left"></i> Descripción</label>
+            <textarea id="movie-description" placeholder="Breve descripción de la película..."></textarea>
+        </div>
+        
+        <button id="upload-button" class="btn">
+            <i class="fas fa-video"></i> Seleccionar Película desde tu PC
+        </button>
+        
+        <div class="progress-container" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        
+        <div id="upload-preview"></div>
+        
+        <button id="save-button" class="btn" disabled>
+            <i class="fas fa-save"></i> Guardar Película
+        </button>
+    </div>
+
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+    <script>
+        // Configuración de Cloudinary
+        const cloudName = 'dlhir3l48';
+        const uploadPreset = 'movies_upload';
+        
+        // Elementos del DOM
+        const uploadButton = document.getElementById('upload-button');
+        const saveButton = document.getElementById('save-button');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const uploadPreview = document.getElementById('upload-preview');
+        
+        let uploadedVideo = null;
+        
+        // Configurar el widget de subida
+        const uploadWidget = cloudinary.createUploadWidget({
+            cloudName: cloudName,
+            uploadPreset: uploadPreset,
+            sources: ['local'],
+            multiple: false,
+            resourceType: 'video',
+            maxFileSize: 100000000, // 100MB
+            clientAllowedFormats: ['mp4', 'mov', 'avi', 'mkv'],
+            showAdvancedOptions: true,
+            cropping: false
+        }, (error, result) => {
+            if (!error && result && result.event) {
+                switch(result.event) {
+                    case 'queues-start':
+                        progressContainer.style.display = 'block';
+                        break;
+                        
+                    case 'upload-progress':
+                        const progress = Math.round(result.info.progress);
+                        progressBar.style.width = `${progress}%`;
+                        break;
+                        
+                    case 'success':
+                        uploadedVideo = result.info;
+                        progressBar.style.width = '100%';
+                        
+                        uploadPreview.innerHTML = `
+                            <h3>${uploadedVideo.original_filename}</h3>
+                            <video controls>
+                                <source src="${uploadedVideo.secure_url}" type="video/mp4">
+                            </video>
+                            <p>Tamaño: ${formatFileSize(uploadedVideo.bytes)}</p>
+                        `;
+                        
+                        saveButton.disabled = false;
+                        break;
+                }
+            }
+        });
+        
+        // Función para formatear el tamaño del archivo
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+            else if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
+            else return (bytes / 1073741824).toFixed(2) + ' GB';
+        }
+        
+        // Evento para abrir el widget de subida
+        uploadButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            uploadWidget.open();
+        });
+        
+        // Evento para guardar la película
+        saveButton.addEventListener('click', () => {
+            if (uploadedVideo) {
+                const title = document.getElementById('movie-title').value || uploadedVideo.original_filename;
+                alert(`Película "${title}" subida correctamente!\n\nSerás redirigido a la página principal.`);
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
