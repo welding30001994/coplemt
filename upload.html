@@ -3,23 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subir Película | CineCloud</title>
+    <title>Subir Fotos | Galería Cloudinary</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: #1a1a2e;
-            color: white;
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --gray: #6b7280;
+        }
+        
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f3f4f6;
+            color: var(--dark);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
         }
         
         header {
-            background: #16213e;
-            padding: 1rem;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -28,284 +41,280 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
         }
         
         .logo i {
-            color: #4cc9f0;
-        }
-        
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-            padding: 8px 16px;
-            border-radius: 4px;
-            transition: background 0.3s;
-        }
-        
-        nav a:hover {
-            background: rgba(255, 255, 255, 0.1);
+            font-size: 1.5rem;
         }
         
         .upload-container {
-            max-width: 800px;
+            max-width: 600px;
             margin: 2rem auto;
             padding: 2rem;
-            background: #16213e;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
         h1 {
-            color: #4cc9f0;
-            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
         
-        .form-group {
+        .upload-area {
+            border: 2px dashed var(--gray);
+            border-radius: 0.5rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
             margin-bottom: 1.5rem;
         }
         
-        label {
-            display: block;
+        .upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .upload-area p {
+            color: var(--gray);
             margin-bottom: 0.5rem;
-            font-weight: bold;
         }
         
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #4cc9f0;
-            background: rgba(0, 0, 0, 0.2);
-            color: white;
-            border-radius: 4px;
-        }
-        
-        textarea {
-            min-height: 100px;
-            resize: vertical;
+        .upload-area .small {
+            font-size: 0.875rem;
         }
         
         .btn {
-            background: #4cc9f0;
-            color: #16213e;
+            background-color: var(--primary);
+            color: white;
             border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 4px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 0.375rem;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background-color 0.3s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 0.5rem;
+            text-decoration: none;
         }
         
         .btn:hover {
-            background: #3aa8d8;
+            background-color: var(--primary-dark);
         }
         
         .btn:disabled {
-            background: #cccccc;
+            background-color: var(--gray);
             cursor: not-allowed;
         }
         
-        #upload-preview {
-            margin-top: 20px;
-            text-align: center;
-        }
-        
-        #upload-preview video {
-            max-width: 100%;
-            border-radius: 4px;
-        }
-        
         .progress-container {
-            margin: 20px 0;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
+            margin: 1.5rem 0;
+            background-color: #e5e7eb;
+            border-radius: 0.375rem;
             overflow: hidden;
             display: none;
         }
         
         .progress-bar {
-            height: 10px;
-            background: #4cc9f0;
+            height: 0.5rem;
+            background-color: var(--primary);
             width: 0%;
             transition: width 0.3s;
+        }
+        
+        .preview-container {
+            margin-top: 1.5rem;
+            text-align: center;
+            display: none;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .success-message {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-top: 1rem;
+            display: none;
         }
     </style>
 </head>
 <body>
     <header>
         <div class="logo">
-            <i class="fas fa-film fa-2x"></i>
-            <h1>CineCloud</h1>
+            <i class="fas fa-camera-retro"></i>
+            <span>Galería Cloudinary</span>
         </div>
-        <nav>
-            <a href="index.html"><i class="fas fa-home"></i> Inicio</a>
-            <a href="upload.html" class="active"><i class="fas fa-upload"></i> Subir Película</a>
-        </nav>
+        <a href="galeria.html" class="btn">
+            <i class="fas fa-images"></i> Ver Galería
+        </a>
     </header>
 
-    <div class="upload-container">
-        <h1><i class="fas fa-cloud-upload-alt"></i> Subir Nueva Película</h1>
-        
-        <div class="form-group">
-            <label for="movie-title"><i class="fas fa-heading"></i> Título de la Película</label>
-            <input type="text" id="movie-title" placeholder="Ej: El Padrino">
+    <main>
+        <div class="upload-container">
+            <h1>
+                <i class="fas fa-cloud-upload-alt"></i>
+                Subir Nueva Foto
+            </h1>
+            
+            <div class="upload-area" id="upload-area">
+                <i class="fas fa-images"></i>
+                <p>Arrastra tu foto aquí o haz clic para seleccionar</p>
+                <p class="small">Formatos: JPG, PNG, GIF (Máx. 10MB)</p>
+            </div>
+            
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+            
+            <div class="progress-container" id="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            
+            <div class="preview-container" id="preview-container">
+                <img id="preview-image" class="preview-image" src="" alt="Vista previa">
+            </div>
+            
+            <div class="success-message" id="success-message">
+                <i class="fas fa-check-circle"></i>
+                <span id="success-text">Foto subida correctamente!</span>
+            </div>
+            
+            <button id="upload-btn" class="btn" disabled>
+                <i class="fas fa-upload"></i> Subir Foto
+            </button>
         </div>
-        
-        <div class="form-group">
-            <label for="movie-description"><i class="fas fa-align-left"></i> Descripción</label>
-            <textarea id="movie-description" placeholder="Breve descripción de la película..."></textarea>
-        </div>
-        
-        <button id="upload-button" class="btn">
-            <i class="fas fa-video"></i> Seleccionar Película desde tu PC
-        </button>
-        
-        <div class="progress-container" id="progress-container">
-            <div class="progress-bar" id="progress-bar"></div>
-        </div>
-        
-        <div id="upload-preview"></div>
-        
-        <button id="save-button" class="btn" disabled>
-            <i class="fas fa-save"></i> Guardar Película
-        </button>
-    </div>
+    </main>
 
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-     // Configuración de Cloudinary
-const cloudName = 'dlhir3l48';
-const uploadPreset = 'movies_upload'; // DEBE coincidir exactamente con tu preset en Cloudinary
-
-// Elementos del DOM
-const uploadButton = document.getElementById('upload-button');
-const saveButton = document.getElementById('save-button');
-const progressContainer = document.getElementById('progress-container');
-const progressBar = document.getElementById('progress-bar');
-const uploadPreview = document.getElementById('upload-preview');
-const movieTitleInput = document.getElementById('movie-title');
-const movieDescInput = document.getElementById('movie-description');
-
-let uploadedVideo = null;
-
-// Configuración del Widget de Cloudinary (versión corregida)
-const uploadWidget = cloudinary.createUploadWidget({
-    cloudName: cloudName,
-    uploadPreset: uploadPreset,
-    sources: ['local'],
-    multiple: false,
-    resourceType: 'video',
-    maxFileSize: 100000000, // 100MB máximo
-    clientAllowedFormats: ['mp4', 'mov', 'avi', 'mkv'],
-    folder: 'cinecloud_movies', // Opcional pero recomendado
-    showAdvancedOptions: false,
-    cropping: false,
-    styles: {
-        palette: {
-            window: "#1F2937",
-            windowBorder: "#4B5563",
-            tabIcon: "#F59E0B",
-            textDark: "#111827",
-            textLight: "#F3F4F6"
+        // Configuración de Cloudinary
+        const cloudName = 'dlhir3l48';
+        const uploadPreset = 'fotos_preset'; // Asegúrate de crear este preset en Cloudinary
+        
+        // Elementos del DOM
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const successMessage = document.getElementById('success-message');
+        const successText = document.getElementById('success-text');
+        
+        let selectedFile = null;
+        
+        // Configurar el widget de Cloudinary
+        const uploadWidget = cloudinary.createUploadWidget({
+            cloudName: cloudName,
+            uploadPreset: uploadPreset,
+            sources: ['local'],
+            multiple: false,
+            resourceType: 'image',
+            maxFileSize: 10000000, // 10MB
+            clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif'],
+            cropping: false,
+            showPoweredBy: false,
+            styles: {
+                palette: {
+                    window: "#ffffff",
+                    windowBorder: "#90a0b3",
+                    tabIcon: "#4f46e5",
+                    menuIcons: "#5a616a",
+                    textDark: "#000000",
+                    textLight: "#ffffff",
+                    link: "#4f46e5",
+                    action: "#4f46e5",
+                    inactiveTabIcon: "#0e2f44",
+                    error: "#c43737",
+                    inProgress: "#4f46e5",
+                    complete: "#10b981",
+                    sourceBg: "#f4f4f5"
+                },
+                fonts: {
+                    default: null,
+                    "'Inter', sans-serif": {
+                        url: "https://fonts.googleapis.com/css?family=Inter",
+                        active: true
+                    }
+                }
+            }
+        }, handleUpload);
+        
+        // Manejar la subida
+        function handleUpload(error, result) {
+            if (error) {
+                console.error('Error al subir:', error);
+                successText.textContent = `Error al subir: ${error.message}`;
+                successMessage.style.display = 'block';
+                successMessage.style.backgroundColor = '#fee2e2';
+                successMessage.style.color = '#b91c1c';
+                return;
+            }
+            
+            if (result && result.event === 'success') {
+                console.log('Foto subida:', result.info);
+                progressBar.style.width = '100%';
+                
+                // Mostrar mensaje de éxito
+                successText.textContent = '¡Foto subida correctamente!';
+                successMessage.style.display = 'block';
+                successMessage.style.backgroundColor = '#d1fae5';
+                successMessage.style.color = '#065f46';
+                
+                // Deshabilitar botón de subida
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-check"></i> Subida completada';
+                
+                // Redirigir después de 2 segundos (puedes cambiar esto)
+                setTimeout(() => {
+                    window.location.href = 'galeria.html'; // Cambia a tu URL de galería
+                }, 2000);
+            }
+            
+            if (result && result.event === 'upload-progress') {
+                const progress = Math.round(result.info.progress);
+                progressBar.style.width = `${progress}%`;
+            }
         }
-    }
-}, handleUpload);
-
-// Función para manejar la subida
-function handleUpload(error, result) {
-    if (error) {
-        console.error('Error en subida:', error);
-        alert(`Error al subir: ${error.message}`);
-        return;
-    }
-
-    switch(result.event) {
-        case 'queues-start':
-            progressContainer.style.display = 'block';
-            break;
-            
-        case 'upload-progress':
-            const progress = Math.round(result.info.progress);
-            progressBar.style.width = `${progress}%`;
-            break;
-            
-        case 'success':
-            uploadedVideo = result.info;
-            progressBar.style.width = '100%';
-            
-            // Mostrar vista previa
-            uploadPreview.innerHTML = `
-                <div class="upload-success">
-                    <i class="fas fa-check-circle"></i>
-                    <h3>${uploadedVideo.original_filename}</h3>
-                    <video controls>
-                        <source src="${uploadedVideo.secure_url}" type="video/mp4">
-                    </video>
-                    <p>Tamaño: ${formatFileSize(uploadedVideo.bytes)}</p>
-                    <p>Subido: ${new Date().toLocaleString()}</p>
-                </div>
-            `;
-            
-            saveButton.disabled = false;
-            break;
-            
-        case 'close':
-            setTimeout(() => {
-                progressContainer.style.display = 'none';
-                progressBar.style.width = '0%';
-            }, 1500);
-            break;
-    }
-}
-
-// Función para formatear tamaño de archivo
-function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + ' bytes';
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
-    else if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
-    else return (bytes / 1073741824).toFixed(2) + ' GB';
-}
-
-// Evento para abrir el widget
-uploadButton.addEventListener('click', (e) => {
-    e.preventDefault();
-    
-    // Validar campos antes de subir
-    if (!movieTitleInput.value.trim()) {
-        alert('Por favor ingresa un título para la película');
-        movieTitleInput.focus();
-        return;
-    }
-    
-    uploadWidget.open();
-});
-
-// Evento para guardar
-saveButton.addEventListener('click', () => {
-    if (!uploadedVideo) {
-        alert('No hay película subida para guardar');
-        return;
-    }
-
-    const title = movieTitleInput.value.trim() || uploadedVideo.original_filename;
-    const description = movieDescInput.value.trim() || 'Sin descripción';
-    
-    // Aquí normalmente enviarías los datos a tu backend
-    console.log('Guardando película:', {
-        title,
-        description,
-        videoInfo: uploadedVideo
-    });
-    
-    alert(`¡"${title}" guardada exitosamente!\nRedirigiendo a la galería...`);
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 2000);
-});
+        
+        // Eventos
+        uploadArea.addEventListener('click', () => {
+            uploadWidget.open();
+        });
+        
+        uploadBtn.addEventListener('click', () => {
+            if (selectedFile) {
+                progressContainer.style.display = 'block';
+                uploadWidget.open();
+            }
+        });
+        
+        // Mostrar vista previa cuando se selecciona un archivo
+        uploadWidget.on('show', () => {
+            console.log('Widget mostrado');
+        });
     </script>
 </body>
 </html>
